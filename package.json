@@ -16,7 +16,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "release-it",
+    "release:dry": "release-it --dry-run"
   },
   "keywords": ["paybeta", "payments", "escrow", "sdk", "nigeria", "ngn"],
   "license": "MIT",
@@ -24,7 +26,9 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^8.0.0",
     "@types/node": "^20.0.0",
+    "release-it": "^17.0.0",
     "tsup": "^8.3.0",
     "typescript": "^5.4.0"
   }

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat",     "section": "Features" },
+          { "type": "fix",      "section": "Bug Fixes" },
+          { "type": "perf",     "section": "Performance Improvements" },
+          { "type": "revert",   "section": "Reverts" },
+          { "type": "docs",     "section": "Documentation" },
+          { "type": "refactor", "section": "Code Refactoring", "hidden": true },
+          { "type": "test",     "hidden": true },
+          { "type": "chore",    "hidden": true },
+          { "type": "ci",       "hidden": true }
+        ]
+      },
+      "infile": "CHANGELOG.md",
+      "header": "# Changelog\n\nAll notable changes to `@paybeta/node` will be documented here.\n\nThe format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).\n"
+    }
+  },
+  "git": {
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true,
+    "commitMessage": "chore(release): @paybeta/node v${version}",
+    "tagName": "node-sdk-v${version}",
+    "tagAnnotation": "@paybeta/node v${version}"
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "ci": {
+    "git": {
+      "requireBranch": false,
+      "requireCleanWorkingDir": false
+    }
+  }
+}
