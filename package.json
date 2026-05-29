@@ -1,6 +1,6 @@
 {
   "name": "@paybeta/node",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official Node.js SDK for the Paybeta payments API",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -12,7 +12,9 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -20,7 +22,14 @@
     "release": "release-it",
     "release:dry": "release-it --dry-run"
   },
-  "keywords": ["paybeta", "payments", "escrow", "sdk", "nigeria", "ngn"],
+  "keywords": [
+    "paybeta",
+    "payments",
+    "escrow",
+    "sdk",
+    "nigeria",
+    "ngn"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=18"
