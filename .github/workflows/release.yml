@@ -4,6 +4,18 @@ on:
   push:
     branches:
       - main
+    # conventional-changelog-conventionalcommits has no concept of a
+    # commit type that skips a release — every commit bumps at least a
+    # patch (see its whatBump: `level` starts at 2/patch and is only ever
+    # raised to minor/major, never suppressed). Since tooling-only changes
+    # still use real commit types for commitlint/changelog purposes, the
+    # only actual way to stop them from publishing an empty-content patch
+    # release is to stop the workflow from running at all for these paths.
+    paths-ignore:
+      - '.github/**'
+      - '.husky/**'
+      - '.release-it.json'
+      - 'commitlint.config.js'
 
 # Only one release job runs at a time; queued runs wait rather than cancel.
 concurrency:
