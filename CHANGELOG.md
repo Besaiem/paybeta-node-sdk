@@ -5,6 +5,8 @@ All notable changes to `@paybetaby/node-sdk` will be documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
+## [1.0.1](https://github.com/Besaiem/paybeta-node-sdk/compare/node-sdk-v1.0.0...node-sdk-v1.0.1) (2026-09-10)
+
 ## [1.0.0](https://github.com/Besaiem/paybeta-node-sdk/compare/node-sdk-v0.1.1...node-sdk-v1.0.0) (2026-09-10)
 
 
