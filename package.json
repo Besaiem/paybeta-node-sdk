@@ -1,6 +1,6 @@
 {
   "name": "@paybetaby/node-sdk",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Official Node.js SDK for the Paybeta payments API",
   "repository": {
     "type": "git",
