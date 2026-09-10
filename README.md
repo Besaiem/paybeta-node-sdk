@@ -1,6 +1,6 @@
-# @paybeta/node
+# @paybetaby/node-sdk
 
-Official Node.js SDK for the [Paybeta](https://paybeta.com) payments API. Fully typed TypeScript library with zero runtime dependencies, native `fetch`, and dual CJS/ESM output.
+Official Node.js SDK for the [Paybeta](https://usepaybeta.com) payments API. Fully typed TypeScript library with zero runtime dependencies, native `fetch`, and dual CJS/ESM output.
 
 ---
 
@@ -26,7 +26,7 @@ Official Node.js SDK for the [Paybeta](https://paybeta.com) payments API. Fully 
 ## Requirements
 
 - Node.js **18** or later (uses native `fetch`)
-- A Paybeta merchant account — [sign up at paybeta.com](https://paybeta.com)
+- A Paybeta merchant account — [sign up at usepaybeta.com](https://usepaybeta.com)
 - An API key from your Paybeta dashboard (`pb_live_…` for production, `pb_test_…` for sandbox)
 
 ---
@@ -34,11 +34,11 @@ Official Node.js SDK for the [Paybeta](https://paybeta.com) payments API. Fully 
 ## Installation
 
 ```bash
-npm install @paybeta/node
+npm install @paybetaby/node-sdk
 # or
-yarn add @paybeta/node
+yarn add @paybetaby/node-sdk
 # or
-pnpm add @paybeta/node
+pnpm add @paybetaby/node-sdk
 ```
 
 ---
@@ -46,7 +46,7 @@ pnpm add @paybeta/node
 ## Quick Start
 
 ```typescript
-import { PaybetaClient } from '@paybeta/node';
+import { PaybetaClient } from '@paybetaby/node-sdk';
 
 const paybeta = new PaybetaClient({
   apiKey: process.env.PAYBETA_API_KEY!,
@@ -452,7 +452,7 @@ const paybeta = new PaybetaClient({
 
 ```typescript
 import express from 'express';
-import { PaybetaClient, PaybetaError, type WebhookEvent } from '@paybeta/node';
+import { PaybetaClient, PaybetaError, type WebhookEvent } from '@paybetaby/node-sdk';
 
 const app = express();
 const paybeta = new PaybetaClient({
@@ -533,7 +533,7 @@ The SDK throws two error types:
 Thrown when the API returns a non-2xx response.
 
 ```typescript
-import { PaybetaApiError } from '@paybeta/node';
+import { PaybetaApiError } from '@paybetaby/node-sdk';
 
 try {
   const escrow = await paybeta.escrows.create({ ... });
@@ -564,7 +564,7 @@ try {
 Thrown for client-side errors: request timeout, webhook signature failure, missing configuration.
 
 ```typescript
-import { PaybetaError } from '@paybeta/node';
+import { PaybetaError } from '@paybetaby/node-sdk';
 
 try {
   const event = paybeta.webhooks.constructEvent(rawBody, signature);
@@ -633,7 +633,7 @@ import type {
   PaymentWebhookEvent,
   EscrowWebhookEvent,
   DisputeWebhookEvent,
-} from '@paybeta/node';
+} from '@paybetaby/node-sdk';
 ```
 
 ---
@@ -641,8 +641,8 @@ import type {
 ## Building from Source
 
 ```bash
-git clone https://github.com/paybeta/paybeta-sdks
-cd paybeta-sdks/@paybeta-node-sdk
+git clone https://github.com/Besaiem/paybeta-node-sdk
+cd paybeta-node-sdk
 
 npm install
 npm run build       # outputs to dist/

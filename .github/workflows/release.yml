@@ -20,19 +20,25 @@ jobs:
 
     permissions:
       contents: write   # push release commit + tag
+      id-token: write   # mint the OIDC token npm's trusted-publishing flow exchanges for a publish grant — no NPM_TOKEN secret needed
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0        # full history required for conventional-changelog
+          ref: main              # actions/checkout defaults to a detached HEAD at the pushed SHA; .release-it.json's requireBranch: "main" needs an actual branch checked out
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          # npm's OIDC trusted-publishing flow requires npm CLI >= 11.5.1,
+          # which ships by default with Node 24+ — older Node versions would
+          # need a manual `npm install -g npm@latest` step first.
+          node-version: '24'
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Configure git identity
         run: |
@@ -42,10 +48,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
 
-      - name: Release
+      - name: Release (version bump, changelog, git tag, GitHub release, npm publish)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run release -- --ci

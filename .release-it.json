@@ -17,26 +17,21 @@
         ]
       },
       "infile": "CHANGELOG.md",
-      "header": "# Changelog\n\nAll notable changes to `@paybeta/node` will be documented here.\n\nThe format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).\n"
+      "header": "# Changelog\n\nAll notable changes to `@paybetaby/node-sdk` will be documented here.\n\nThe format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).\n"
     }
   },
   "git": {
     "requireBranch": "main",
     "requireCleanWorkingDir": true,
-    "commitMessage": "chore(release): @paybeta/node v${version}",
+    "commitMessage": "chore(release): @paybetaby/node-sdk v${version}",
     "tagName": "node-sdk-v${version}",
-    "tagAnnotation": "@paybeta/node v${version}"
+    "tagAnnotation": "@paybetaby/node-sdk v${version}"
   },
   "github": {
-    "release": false
+    "release": true
   },
   "npm": {
-    "publish": false
-  },
-  "ci": {
-    "git": {
-      "requireBranch": false,
-      "requireCleanWorkingDir": false
-    }
+    "publish": true,
+    "skipChecks": true
   }
 }

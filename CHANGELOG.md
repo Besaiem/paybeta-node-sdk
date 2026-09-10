@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@paybeta/node` will be documented here.
+All notable changes to `@paybetaby/node-sdk` will be documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
 
