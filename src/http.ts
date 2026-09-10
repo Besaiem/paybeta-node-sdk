@@ -64,10 +64,19 @@ export class HttpClient {
         signal: controller.signal,
       });
     } catch (err) {
+      // Every failure that can come out of `fetch` itself — timeout, DNS
+      // failure, connection refused, TLS error, etc. — is normalized to
+      // PaybetaError here, not just AbortError. Previously only the
+      // timeout case was wrapped, so callers had to separately handle a
+      // raw, unwrapped TypeError/AggregateError from `fetch` for every
+      // other kind of network failure; PaybetaApiError is reserved for
+      // "the API responded, and it was an error," which none of these
+      // are. The original error is preserved as `cause` for debugging.
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new PaybetaError(`Request timed out after ${this.config.timeout}ms`);
+        throw new PaybetaError(`Request timed out after ${this.config.timeout}ms`, { cause: err });
       }
-      throw err;
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new PaybetaError(`Network request to PayBeta failed: ${detail}`, { cause: err });
     } finally {
       clearTimeout(timer);
     }

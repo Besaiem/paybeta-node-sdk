@@ -561,16 +561,16 @@ try {
 
 ### `PaybetaError`
 
-Thrown for client-side errors: request timeout, webhook signature failure, missing configuration.
+Thrown for anything that isn't an API response: request timeout, DNS/connection failures, webhook signature failure, missing configuration. Every failure mode `fetch` itself can produce — not just timeouts — is normalized to this one type, so you don't need to separately handle a raw, unwrapped network error; the original error is available as `err.cause` if you need it for debugging.
 
 ```typescript
 import { PaybetaError } from '@paybetaby/node-sdk';
 
 try {
-  const event = paybeta.webhooks.constructEvent(rawBody, signature);
+  const event = paybeta.webhooks.constructEvent(rawBody, signature, timestamp);
 } catch (err) {
   if (err instanceof PaybetaError) {
-    // signature mismatch, missing webhookSecret, etc.
+    // signature mismatch, missing webhookSecret, network failure, etc.
     console.error(err.message);
   }
 }

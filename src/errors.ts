@@ -1,6 +1,6 @@
 export class PaybetaError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
     this.name = 'PaybetaError';
     Object.setPrototypeOf(this, new.target.prototype);
   }
