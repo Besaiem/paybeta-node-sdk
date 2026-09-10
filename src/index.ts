@@ -3,7 +3,7 @@ export type { PaybetaClientConfig } from './client.js';
 
 export { PaybetaError, PaybetaApiError } from './errors.js';
 
-export type { PaginatedList, RequestOptions } from './types/common.js';
+export type { RequestOptions } from './types/common.js';
 
 export type {
   Transaction,
@@ -27,6 +27,8 @@ export type {
   Escrow,
   EscrowStatus,
   EscrowBalance,
+  EscrowListResponse,
+  EscrowConditionsResponse,
   ReleaseCondition,
   ReleasePolicy,
   ConditionType,
@@ -46,8 +48,11 @@ export type {
   DisputeStage,
   DisputeType,
   DisputePriority,
+  OpenedBy,
   ResolutionOutcome,
   Evidence,
+  EvidenceType,
+  UploadedBy,
   OpenDisputeParams,
   ListDisputesParams,
   UploadEvidenceParams,

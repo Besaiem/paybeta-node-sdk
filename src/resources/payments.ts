@@ -5,7 +5,6 @@ import type {
   InitiatePaymentParams,
   ListPaymentsParams,
 } from '../types/payments.js';
-import type { PaginatedList } from '../types/common.js';
 
 export class PaymentsResource {
   constructor(private readonly http: HttpClient) {}
@@ -16,8 +15,17 @@ export class PaymentsResource {
     return this.http.post<Payment>('/payments', body);
   }
 
-  list(params?: ListPaymentsParams): Promise<PaginatedList<Payment>> {
-    return this.http.get<PaginatedList<Payment>>('/payments', params as Record<string, string | number | undefined>);
+  /**
+   * Lists payments. The bare `/payments` endpoint is platform-role only —
+   * an API-key (merchant) caller gets a 403 there — so passing `merchantId`
+   * (which every merchant API key call needs) routes to
+   * `/payments/merchant/:merchantId` instead, matching what the API
+   * actually allows a merchant credential to call.
+   */
+  list(params?: ListPaymentsParams): Promise<Payment[]> {
+    const { merchantId, ...rest } = params ?? {};
+    const path = merchantId ? `/payments/merchant/${merchantId}` : '/payments';
+    return this.http.get<Payment[]>(path, rest as Record<string, string | number | undefined>);
   }
 
   retrieve(id: string): Promise<Payment> {

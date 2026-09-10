@@ -8,7 +8,7 @@ import { WebhooksResource } from './resources/webhooks.js';
 export interface PaybetaClientConfig {
   /** API key obtained from the Paybeta dashboard (pb_live_* or pb_test_*) */
   apiKey: string;
-  /** Override the default API base URL. Defaults to https://api.paybeta.com */
+  /** Override the default API base URL. Defaults to https://api.usepaybeta.com */
   baseUrl?: string;
   /** Webhook signing secret used to verify incoming webhook payloads */
   webhookSecret?: string;
@@ -30,7 +30,7 @@ export class PaybetaClient {
 
     const http = new HttpClient({
       apiKey: config.apiKey,
-      baseUrl: config.baseUrl ?? 'https://api.paybeta.com',
+      baseUrl: config.baseUrl ?? 'https://api.usepaybeta.com',
       timeout: config.timeout ?? 30_000,
     });
 

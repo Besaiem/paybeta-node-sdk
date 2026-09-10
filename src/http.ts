@@ -27,7 +27,11 @@ export class HttpClient {
       query?: Record<string, string | number | boolean | undefined | null>;
     },
   ): Promise<T> {
-    const url = new URL(path, this.config.baseUrl);
+    // The public API is served behind api-gateway under a /v1 prefix — the
+    // gateway's route table only matches /v1/... and 404s anything else, so
+    // every request must go there regardless of how `path` is written by
+    // the resource classes below.
+    const url = new URL(`/v1${path}`, this.config.baseUrl);
 
     if (options?.query) {
       for (const [key, value] of Object.entries(options.query)) {

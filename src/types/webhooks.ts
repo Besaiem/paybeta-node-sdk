@@ -3,29 +3,31 @@ import type { Payment } from './payments.js';
 import type { Escrow } from './escrows.js';
 import type { Dispute } from './disputes.js';
 
+// Matches the @OnEvent(...) listeners actually wired up in
+// OutboundWebhookService — every event type PayBeta can ever deliver, and
+// nothing invented that would never arrive. Note transaction.escrowed (not
+// transaction.in_escrow) and payment.received (not payment.initiated /
+// payment.completed) — there is no dispute.cancelled or any escrow.* event
+// besides escrow.released.
 export type WebhookEventType =
   | 'transaction.created'
   | 'transaction.funded'
-  | 'transaction.in_escrow'
+  | 'transaction.escrowed'
   | 'transaction.released'
   | 'transaction.disputed'
   | 'transaction.refunded'
-  | 'payment.initiated'
-  | 'payment.completed'
+  | 'payment.received'
   | 'payment.failed'
-  | 'escrow.created'
-  | 'escrow.funded'
-  | 'escrow.released'
-  | 'escrow.disputed'
-  | 'escrow.refunded'
   | 'dispute.opened'
   | 'dispute.resolved'
-  | 'dispute.cancelled';
+  | 'escrow.released';
 
+// Field names match the JSON body OutboundWebhookService actually sends
+// (`{ id, eventType, timestamp, data }`) — not `type`/`createdAt`.
 export interface WebhookEvent<T = unknown> {
   id: string;
-  type: WebhookEventType;
-  createdAt: string;
+  eventType: WebhookEventType;
+  timestamp: string;
   data: T;
 }
 

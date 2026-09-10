@@ -5,7 +5,7 @@ import type {
   ListTransactionsParams,
   TransactionEvent,
 } from '../types/transactions.js';
-import type { PaginatedList, RequestOptions } from '../types/common.js';
+import type { RequestOptions } from '../types/common.js';
 
 export class TransactionsResource {
   constructor(private readonly http: HttpClient) {}
@@ -17,8 +17,15 @@ export class TransactionsResource {
     return this.http.post<Transaction>('/transactions', body);
   }
 
-  list(params?: ListTransactionsParams): Promise<PaginatedList<Transaction>> {
-    return this.http.get<PaginatedList<Transaction>>('/transactions', params as Record<string, string | number | undefined>);
+  /**
+   * Lists transactions. The bare `/transactions` endpoint is platform-role
+   * only — an API-key (merchant) caller gets a 403 there — so passing
+   * `merchantId` routes to `/transactions/merchant/:merchantId` instead.
+   */
+  list(params?: ListTransactionsParams): Promise<Transaction[]> {
+    const { merchantId, ...rest } = params ?? {};
+    const path = merchantId ? `/transactions/merchant/${merchantId}` : '/transactions';
+    return this.http.get<Transaction[]>(path, rest as Record<string, string | number | undefined>);
   }
 
   retrieve(id: string): Promise<Transaction> {

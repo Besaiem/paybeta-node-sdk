@@ -55,9 +55,11 @@ const paybeta = new PaybetaClient({
 
 // 1. Create a transaction
 const transaction = await paybeta.transactions.create({
+  merchantId:  'your-merchant-id',
   buyerEmail:  'buyer@example.com',
+  buyerPhone:  '+2348012345678',
   sellerEmail: 'seller@example.com',
-  amount:      50_000,   // in kobo (₦500.00)
+  amount:      500,       // decimal naira (₦500.00) — unlike Payment.amount, which is kobo
   currency:    'NGN',
 });
 
@@ -102,8 +104,8 @@ const paybeta = new PaybetaClient({
   // Required
   apiKey: 'pb_live_...',
 
-  // Optional — defaults to https://api.paybeta.com
-  baseUrl: 'https://api.paybeta.com',
+  // Optional — defaults to https://api.usepaybeta.com
+  baseUrl: 'https://api.usepaybeta.com',
 
   // Optional — required only for webhook.constructEvent()
   webhookSecret: 'your-webhook-secret',
@@ -118,7 +120,7 @@ const paybeta = new PaybetaClient({
 | Option          | Type     | Default                        | Description                                   |
 |-----------------|----------|--------------------------------|-----------------------------------------------|
 | `apiKey`        | `string` | **required**                   | Your Paybeta API key                          |
-| `baseUrl`       | `string` | `https://api.paybeta.com`      | Override for staging or self-hosted instances |
+| `baseUrl`       | `string` | `https://api.usepaybeta.com`   | Override for staging or self-hosted instances |
 | `webhookSecret` | `string` | `undefined`                    | HMAC secret for webhook signature verification|
 | `timeout`       | `number` | `30000`                        | Request timeout in milliseconds               |
 
@@ -134,9 +136,11 @@ A **transaction** represents the commercial relationship between a buyer and sel
 
 ```typescript
 const transaction = await paybeta.transactions.create({
+  merchantId:  'your-merchant-id',
   buyerEmail:  'buyer@example.com',
+  buyerPhone:  '+2348012345678',
   sellerEmail: 'seller@example.com',
-  amount:      150_000,   // ₦1,500.00 in kobo
+  amount:      1_500,      // ₦1,500.00 — decimal naira, not kobo
   currency:    'NGN',
   metadata: {
     orderId:     'ORD-001',
@@ -150,8 +154,10 @@ console.log(transaction.status); // 'INITIATED'
 
 #### `paybeta.transactions.list(params?)`
 
+Returns a bare array — there is no pagination envelope on this endpoint. Passing `merchantId` is required for an API-key caller: the API only allows merchant credentials to call `/transactions/merchant/:id`, not the bare `/transactions` list (that one's platform-role only and 403s an API key).
+
 ```typescript
-const { data, total } = await paybeta.transactions.list({
+const transactions = await paybeta.transactions.list({
   merchantId: 'your-merchant-id',
   status:     'FUNDED',
   limit:      20,
@@ -186,9 +192,9 @@ A **payment** records a customer's attempt to fund a transaction via a PSP (Pays
 const payment = await paybeta.payments.initiate({
   merchantId:    'your-merchant-id',
   transactionId: transaction.id,
-  amount:        150_000,
+  amount:        150_000,      // kobo — integer minor-unit, unlike Transaction.amount
   currency:      'NGN',
-  paymentMethod: 'CARD',       // 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY'
+  paymentMethod: 'CARD',       // 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY' | 'BANK_ACCOUNT'
   pspType:       'PAYSTACK',   // 'PAYSTACK' | 'FLUTTERWAVE' | 'BANK_DIRECT'
   customerEmail: 'buyer@example.com',
   customerName:  'Jane Doe',   // optional
@@ -220,8 +226,10 @@ const payment = await paybeta.payments.retrieve(paymentId);
 
 #### `paybeta.payments.list(params?)`
 
+Returns a bare array. `merchantId` is required for an API-key caller — same reasoning as transactions above.
+
 ```typescript
-const { data } = await paybeta.payments.list({ merchantId: 'your-merchant-id', limit: 50 });
+const payments = await paybeta.payments.list({ merchantId: 'your-merchant-id', limit: 50 });
 ```
 
 #### `paybeta.payments.retry(id)`
@@ -251,14 +259,15 @@ const escrow = await paybeta.escrows.create({
   transactionId: transaction.id,
   merchantId:    'your-merchant-id',
   buyerEmail:    'buyer@example.com',
+  buyerPhone:    '+2348012345678',   // required — guaranteed WhatsApp/SMS delivery channel
   sellerEmail:   'seller@example.com',
-  amount:        150_000,
+  amount:        1_500,              // decimal naira — the API converts to kobo itself
   currency:      'NGN',
-  releasePolicy: {
+  releasePolicy: {                   // optional
     conditionLogic: 'AND',   // release only when ALL conditions are met
     conditions: [
-      { type: 'DELIVERY_CONFIRMED' },
-      { type: 'BUYER_APPROVED' },
+      { type: 'DELIVERY_CONFIRMATION' },
+      { type: 'BUYER_CONFIRMATION' },
     ],
   },
 });
@@ -266,12 +275,12 @@ const escrow = await paybeta.escrows.create({
 
 **Condition types:**
 
-| Type                  | Description                                        |
-|-----------------------|----------------------------------------------------|
-| `DELIVERY_CONFIRMED`  | Seller confirms goods/services delivered           |
-| `BUYER_APPROVED`      | Buyer explicitly approves release                  |
-| `TIMEOUT_ELAPSED`     | Auto-release after a configured time window        |
-| `MANUAL_RELEASE`      | Merchant triggers release manually                 |
+| Type                    | Description                                        |
+|-------------------------|-----------------------------------------------------|
+| `DELIVERY_CONFIRMATION` | Seller confirms goods/services delivered           |
+| `BUYER_CONFIRMATION`    | Buyer explicitly approves release                  |
+| `TIME_BASED`            | Auto-release after a configured time window        |
+| `MANUAL_APPROVAL`       | Merchant triggers release manually                 |
 
 **Condition logic:**
 
@@ -282,17 +291,19 @@ const escrow = await paybeta.escrows.create({
 
 #### `paybeta.escrows.release(id, params?)`
 
-```typescript
-await paybeta.escrows.release(escrowId, { reason: 'Order delivered and confirmed' });
-```
-
-#### `paybeta.escrows.confirmDelivery(id)`
+`actorId`/`actorType` are accepted for forward-compat only — the API always attributes the action to the authenticated caller, never a client-supplied value.
 
 ```typescript
-await paybeta.escrows.confirmDelivery(escrowId);
+await paybeta.escrows.release(escrowId, { idempotencyKey: 'release-once' });
 ```
 
-#### `paybeta.escrows.confirmBuyer(id)`
+#### `paybeta.escrows.confirmDelivery(id, params?)`
+
+```typescript
+await paybeta.escrows.confirmDelivery(escrowId, { trackingReference: 'DHL123456' });
+```
+
+#### `paybeta.escrows.confirmBuyer(id, params?)`
 
 ```typescript
 await paybeta.escrows.confirmBuyer(escrowId);
@@ -310,37 +321,50 @@ await paybeta.escrows.dispute(escrowId);
 await paybeta.escrows.refund(escrowId);
 ```
 
+#### `paybeta.escrows.cancel(id)`
+
+```typescript
+await paybeta.escrows.cancel(escrowId);
+```
+
 #### `paybeta.escrows.retrieve(id)`
 
 ```typescript
 const escrow = await paybeta.escrows.retrieve(escrowId);
-console.log(escrow.status); // 'FUNDED' | 'PENDING_RELEASE' | 'RELEASED' | ...
+console.log(escrow.status); // lowercase: 'funded' | 'pending_release' | 'released' | ...
+console.log(escrow.amount); // kobo (integer) — not divided down on the way out, unlike on create
 ```
 
 #### `paybeta.escrows.retrieveBalance(id)`
 
+All three amounts are decimal strings (already divided from kobo), not numbers.
+
 ```typescript
-const { balance, currency } = await paybeta.escrows.retrieveBalance(escrowId);
+const { heldAmount, releasedAmount, refundedAmount, currency } = await paybeta.escrows.retrieveBalance(escrowId);
 ```
 
 #### `paybeta.escrows.retrieveConditions(id)`
 
+Returns an envelope, not a bare array.
+
 ```typescript
-const conditions = await paybeta.escrows.retrieveConditions(escrowId);
+const { conditions, canRelease } = await paybeta.escrows.retrieveConditions(escrowId);
 conditions.forEach(c => console.log(c.type, c.isMet));
 ```
 
 #### `paybeta.escrows.list(params?)`
 
+Unlike payments/transactions/disputes, this returns a `{ escrows, total, limit, offset }` envelope, not a bare array. `merchantId` routes to the merchant-scoped endpoint, same as the other resources.
+
 ```typescript
-const { data } = await paybeta.escrows.list({
+const { escrows, total } = await paybeta.escrows.list({
   merchantId: 'your-merchant-id',
-  status:     'FUNDED',
+  status:     'funded',
   limit:      20,
 });
 ```
 
-**Escrow statuses:** `CREATED` → `FUNDED` → `PENDING_RELEASE` → `RELEASED` / `DISPUTED` / `REFUNDED` / `CANCELLED`
+**Escrow statuses (lowercase):** `created` → `funded` → `pending_release` → `released` / `disputed` / `refunded` / `cancelled`
 
 ---
 
@@ -350,24 +374,36 @@ A **dispute** is opened when buyer and seller cannot agree. Paybeta provides a s
 
 #### `paybeta.disputes.open(params)`
 
+All of the fields below are required by the API — there's no partial/inferred version of opening a dispute.
+
 ```typescript
 const dispute = await paybeta.disputes.open({
   transactionId: transaction.id,
-  escrowId:      escrow.id,         // optional
-  disputeType:   'BUYER_COMPLAINT',
-  description:   'Item not as described.',
+  escrowId:      escrow.id,
+  merchantId:    'your-merchant-id',
+  buyerEmail:    'buyer@example.com',
+  sellerEmail:   'seller@example.com',
+  disputeType:   'NON_DELIVERY',
   priority:      'HIGH',
+  description:   'Item not as described.',
+  amount:        150_000,   // kobo
+  currency:      'NGN',
+  openedBy:      'BUYER',   // 'BUYER' | 'SELLER'
 });
 ```
 
 #### `paybeta.disputes.uploadEvidence(id, params)`
 
+Field names match the API's JSON body exactly — not a generic `fileBase64`/`fileType`/`submittedBy` shape.
+
 ```typescript
 await paybeta.disputes.uploadEvidence(disputeId, {
-  fileBase64:  Buffer.from(fileBytes).toString('base64'),
-  fileType:    'image/jpeg',
-  description: 'Photo of damaged packaging',
-  submittedBy: 'buyer@example.com',
+  evidenceType: 'IMAGE',       // 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'OTHER'
+  uploadedBy:   'BUYER',       // 'BUYER' | 'SELLER' | 'ARBITRATOR'
+  fileName:     'packaging.jpg',
+  fileData:     Buffer.from(fileBytes).toString('base64'),
+  mimeType:     'image/jpeg',
+  description:  'Photo of damaged packaging',
 });
 ```
 
@@ -375,10 +411,8 @@ await paybeta.disputes.uploadEvidence(disputeId, {
 
 ```typescript
 await paybeta.disputes.resolve(disputeId, {
-  outcome:              'BUYER_WINS',
-  notes:                'Evidence confirmed item was not delivered.',
-  buyerRefundAmount:    150_000,
-  sellerPayoutAmount:   0,
+  outcome: 'BUYER_WINS',   // 'BUYER_WINS' | 'SELLER_WINS' | 'PARTIAL_REFUND' | 'PARTIAL_RELEASE' | 'SPLIT' | 'CANCELLED'
+  notes:   'Evidence confirmed item was not delivered.',
 });
 ```
 
@@ -390,9 +424,11 @@ await paybeta.disputes.cancel(disputeId, { reason: 'Parties reached mutual agree
 
 #### `paybeta.disputes.retrieve(id)` / `paybeta.disputes.list(params?)`
 
+`list()` returns a bare array. `merchantId` is required for an API-key caller — same reasoning as transactions/payments above.
+
 ```typescript
 const dispute = await paybeta.disputes.retrieve(disputeId);
-const { data } = await paybeta.disputes.list({ merchantId: 'your-merchant-id', status: 'OPEN' });
+const disputes = await paybeta.disputes.list({ merchantId: 'your-merchant-id', status: 'OPENED' });
 ```
 
 ---
@@ -430,10 +466,11 @@ app.post(
   express.raw({ type: '*/*' }),
   (req, res) => {
     const signature = req.headers['x-paybeta-signature'] as string;
+    const timestamp = req.headers['x-paybeta-timestamp'] as string;
 
     let event: WebhookEvent;
     try {
-      event = paybeta.webhooks.constructEvent(req.body, signature);
+      event = paybeta.webhooks.constructEvent(req.body, signature, timestamp);
     } catch (err) {
       if (err instanceof PaybetaError) {
         console.error('Webhook signature invalid:', err.message);
@@ -442,9 +479,9 @@ app.post(
       throw err;
     }
 
-    switch (event.type) {
-      case 'payment.completed':
-        console.log('Payment completed:', event.data);
+    switch (event.eventType) {
+      case 'payment.received':
+        console.log('Payment received:', event.data);
         // fulfil order, send confirmation email, etc.
         break;
       case 'transaction.funded':
@@ -457,7 +494,7 @@ app.post(
         console.log('Dispute opened:', event.data);
         break;
       default:
-        console.log('Unhandled event type:', event.type);
+        console.log('Unhandled event type:', event.eventType);
     }
 
     res.json({ received: true });
@@ -465,27 +502,25 @@ app.post(
 );
 ```
 
+`constructEvent` verifies `HMAC-SHA256(webhookSecret, "${timestamp}.${rawBody}")` against the `X-PayBeta-Signature` header (sent as `sha256=<hex>`) — both the signature *and* timestamp headers are required, since the timestamp is part of what's actually signed, not just metadata.
+
 #### Event types
 
-| Event type              | Description                                      |
-|-------------------------|--------------------------------------------------|
-| `transaction.created`   | New transaction created                          |
-| `transaction.funded`    | Customer's payment cleared; funds received       |
-| `transaction.in_escrow` | Funds moved into escrow hold                     |
-| `transaction.released`  | Funds released to seller                         |
-| `transaction.disputed`  | Dispute opened on transaction                    |
-| `transaction.refunded`  | Transaction refunded to buyer                    |
-| `payment.initiated`     | Payment initiated with PSP                       |
-| `payment.completed`     | Payment confirmed as successful                  |
-| `payment.failed`        | Payment failed or declined                       |
-| `escrow.created`        | Escrow created and awaiting funding              |
-| `escrow.funded`         | Escrow funded                                    |
-| `escrow.released`       | Escrow funds disbursed to seller                 |
-| `escrow.disputed`       | Escrow placed into dispute hold                  |
-| `escrow.refunded`       | Escrow funds returned to buyer                   |
-| `dispute.opened`        | Dispute opened                                   |
-| `dispute.resolved`      | Dispute resolved with outcome                    |
-| `dispute.cancelled`     | Dispute cancelled                                |
+Exactly the events PayBeta can emit — there is no `dispute.cancelled` or any `escrow.*` event besides `escrow.released`.
+
+| Event type               | Description                                      |
+|---------------------------|--------------------------------------------------|
+| `transaction.created`    | New transaction created                          |
+| `transaction.funded`     | Customer's payment cleared; funds received       |
+| `transaction.escrowed`   | Funds moved into escrow hold                     |
+| `transaction.released`   | Funds released to seller                         |
+| `transaction.disputed`   | Dispute opened on transaction                    |
+| `transaction.refunded`   | Transaction refunded to buyer                    |
+| `payment.received`       | Payment confirmed as successful                  |
+| `payment.failed`         | Payment failed or declined                       |
+| `dispute.opened`         | Dispute opened                                   |
+| `dispute.resolved`       | Dispute resolved with outcome                    |
+| `escrow.released`        | Escrow funds disbursed to seller                 |
 
 ---
 
@@ -555,7 +590,6 @@ import type {
   PaybetaClientConfig,
 
   // Common
-  PaginatedList,
   RequestOptions,
 
   // Transactions
@@ -576,6 +610,8 @@ import type {
   Escrow,
   EscrowStatus,
   EscrowBalance,
+  EscrowListResponse,
+  EscrowConditionsResponse,
   ReleasePolicy,
   ReleaseCondition,
   ConditionType,

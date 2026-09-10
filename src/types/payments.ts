@@ -35,6 +35,8 @@ export interface Payment {
   metadata?: Record<string, unknown>;
   createdAt: string;
   completedAt?: string;
+  /** Number of PSP attempts recorded for this payment. */
+  attemptsCount: number;
 }
 
 export interface PaymentAttempt {
@@ -50,6 +52,7 @@ export interface PaymentAttempt {
 export interface InitiatePaymentParams {
   merchantId: string;
   transactionId: string;
+  /** Integer amount in the smallest currency unit (kobo for NGN, cents for USD) — not a decimal. */
   amount: number;
   currency: string;
   paymentMethod: PaymentMethod;

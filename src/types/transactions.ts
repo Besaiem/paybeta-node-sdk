@@ -27,8 +27,12 @@ export interface Transaction {
 }
 
 export interface CreateTransactionParams {
+  merchantId: string;
   buyerEmail: string;
+  /** E.164 phone number — required by the API as a guaranteed WhatsApp/SMS delivery channel. */
+  buyerPhone: string;
   sellerEmail: string;
+  /** Decimal amount in the major currency unit (naira/dollars), unlike Payment.amount which is minor-unit. */
   amount: number;
   currency: string;
   metadata?: Record<string, unknown>;
