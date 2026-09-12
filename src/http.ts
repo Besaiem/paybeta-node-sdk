@@ -16,6 +16,26 @@ interface ApiErrorBody {
   message?: string;
 }
 
+// Every successful api-main response is wrapped by a global interceptor as
+// `{ status: 'success', data: <actual payload>, timestamp }` — checked by
+// shape (not just presence of `data`) so a legitimate resource that happens
+// to have its own `data`/`status` field is never mistaken for the envelope.
+interface SuccessEnvelope {
+  status: 'success';
+  data: unknown;
+  timestamp: string;
+}
+
+function isSuccessEnvelope(payload: unknown): payload is SuccessEnvelope {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    (payload as Record<string, unknown>).status === 'success' &&
+    'data' in payload &&
+    typeof (payload as Record<string, unknown>).timestamp === 'string'
+  );
+}
+
 export class HttpClient {
   constructor(private readonly config: HttpClientConfig) {}
 
@@ -101,7 +121,7 @@ export class HttpClient {
       );
     }
 
-    return payload as T;
+    return (isSuccessEnvelope(payload) ? payload.data : payload) as T;
   }
 
   get<T>(path: string, query?: Record<string, string | number | boolean | undefined | null>): Promise<T> {
