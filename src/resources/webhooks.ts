@@ -38,18 +38,20 @@ export class WebhooksResource {
     // "invalid signature format" error.
     const hexSignature = signature.startsWith('sha256=') ? signature.slice('sha256='.length) : signature;
 
+    // Buffer.from(str, 'hex') never throws on bad input — it silently
+    // truncates at the first invalid character — so malformed hex has to
+    // be rejected explicitly here, before it can masquerade as a valid
+    // (but coincidentally short) signature.
+    if (hexSignature.length % 2 !== 0 || !/^[0-9a-f]+$/i.test(hexSignature)) {
+      throw new PaybetaError('Invalid signature format');
+    }
+
     const expected = createHmac('sha256', this.secret)
       .update(`${timestamp}.${body}`)
       .digest('hex');
 
-    let actual: Buffer;
-    let expectedBuf: Buffer;
-    try {
-      actual = Buffer.from(hexSignature, 'hex');
-      expectedBuf = Buffer.from(expected, 'hex');
-    } catch {
-      throw new PaybetaError('Invalid signature format');
-    }
+    const actual = Buffer.from(hexSignature, 'hex');
+    const expectedBuf = Buffer.from(expected, 'hex');
 
     if (expectedBuf.length !== actual.length || !timingSafeEqual(expectedBuf, actual)) {
       throw new PaybetaError('Webhook signature verification failed');
